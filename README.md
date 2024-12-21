@@ -1,2 +1,2 @@
-# ConVNet_scratch
-Exploring the modern ConvNet architectures in some basic datasets
+# ConvNet_exploration
+Exploring the modern ConvNet architectures in some image datasets
