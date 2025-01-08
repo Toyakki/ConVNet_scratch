@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import torch
 
 def load_labels(label_path):
     label_files = os.listdir(label_path)
@@ -25,6 +26,19 @@ def load_labels(label_path):
                                      'height'
                                     ])
     return df, image_ids
+
+# Helper functions
+def dice_coefficient(pred, target):
+    smooth = 1.
+    
+    iflat = pred.contiguous().view(-1)
+    tflat = target.contiguous().view(-1)
+    intersection = (iflat * tflat).sum()
+    
+    A_sum = torch.sum(tflat * iflat)
+    B_sum = torch.sum(tflat * tflat)
+    
+    return 1 - ((2. * intersection + smooth) / (A_sum + B_sum + smooth) )
 
 # Use cases
 # source = os.path.join('..', 'data')
