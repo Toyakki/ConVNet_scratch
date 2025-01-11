@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import torch
+import matplotlib.pyplot as plt
 
 def load_labels(label_path):
     label_files = os.listdir(label_path)
@@ -26,6 +27,17 @@ def load_labels(label_path):
                                      'height'
                                     ])
     return df, image_ids
+
+def plot_losses(train_losses, val_losses):
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_losses, label='Train Loss')
+    plt.plot(val_losses, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.title('Training and Validation Loss')
+    plt.show()
+
 
 # Helper functions
 def dice_coefficient(pred, target):

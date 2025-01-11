@@ -6,7 +6,7 @@ from tqdm import tqdm
 from utils import dice_coefficient
 
 
-from models import get_unet_model
+from models import get_unet_model, conv_autoencoder, UNetDecoder, HybridUNet
 from dataset import SegmentedMarsDataset
 from utils import dice_coefficient
 
@@ -18,6 +18,7 @@ device = (
     else "cpu"
 )
 batch_size = 8 
+visualize = False
 
 source = os.path.join('..', 'data')
 test_imgs_path = os.path.join(source, 'test/images')
@@ -25,6 +26,7 @@ test_segmented_path = os.path.join(source, 'processed/test')
 test_masks_path = os.path.join(source, 'mask/test')
 
 model_dir = os.path.join('..', 'model')
+encoder_path = os.path.join(model_dir, 'autoencoder.pth')
 best_model_path = os.path.join(model_dir, 'unet_best_model.pth')
 best_dice_model_path = os.path.join(model_dir, 'unet_best_dice_model.pth')
 
@@ -85,12 +87,16 @@ def visualize_pred(images, masks, preds):
 test_dataset = SegmentedMarsDataset(test_imgs_path, test_masks_path, crop_size=(256, 256))
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-unet_model = get_unet_model(num_classes=1).to(device)
-unet_model.load_state_dict(torch.load(best_model_path))
-# unet_model.load_state_dict(torch.load(best_dice_model_path))
+# unet_model = get_unet_model(num_classes=1).to(device)
+autoencoder = conv_autoencoder()
+autoencoder.load_state_dict(torch.load(encoder_path))
+decoder = UNetDecoder(n_classes=1)
+unet_model = HybridUNet(autoencoder, decoder).to(device)
+# unet_model.load_state_dict(torch.load(best_model_path))
+unet_model.load_state_dict(torch.load(best_dice_model_path))
 
 unet_model.to(device)
 
 # Run inference
-avg_dice = run_inference(unet_model, test_dataloader, device, threshold=0.5, visualize=True)
+avg_dice = run_inference(unet_model, test_dataloader, device, threshold=0.5, visualize=visualize)
 print(f"Average Dice Coefficient: {avg_dice:.4f}")

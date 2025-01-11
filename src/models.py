@@ -1,42 +1,50 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.models import vit_b_16
 import segmentation_models_pytorch as smp
+import os
+
 
 from unet_parts import Up
 
 class conv_autoencoder(nn.Module):
     def __init__(self):
         super(conv_autoencoder, self).__init__()
+        self.encoder0 = nn.Sequential(
+            nn.Conv2d(1, 8, 3, stride=1, padding=1),  # Retain spatial dimensions (640x640)
+            nn.ReLU(True)
+        )
         self.encoder1 = nn.Sequential(
-            nn.Conv2d(1, 16, 3, stride=2, padding=1), # b, 320, 320
-            nn.ReLU(True))
-        
+            nn.Conv2d(8, 16, 3, stride=2, padding=1),  # Downsample to 320x320
+            nn.ReLU(True)
+        )
         self.encoder2 = nn.Sequential(
-            nn.Conv2d(16, 32, 3, stride=2, padding=1),
+            nn.Conv2d(16, 32, 3, stride=2, padding=1),  # Downsample to 160x160
             nn.ReLU(True)
-            )
-        
+        )
         self.encoder3 = nn.Sequential(
-            nn.Conv2d(32, 64, 3, stride=2, padding=1), # 80, 80
+            nn.Conv2d(32, 64, 3, stride=2, padding=1),  # Downsample to 80x80
             nn.ReLU(True)
-            )
+        )
         
         self.decoder = nn.Sequential(
-            nn.ConvTranspose2d(64, 32, 3, stride=2, padding=1, output_padding=1), # 160, 160
+            nn.ConvTranspose2d(64, 32, 3, stride=2, padding=1, output_padding=1),  # Upsample to 160x160
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 16, 3, stride=2, padding=1, output_padding=1), # 320, 320
+            nn.ConvTranspose2d(32, 16, 3, stride=2, padding=1, output_padding=1),  # Upsample to 320x320
             nn.ReLU(True),
-            nn.ConvTranspose2d(16, 1, 3, stride=2, padding=1, output_padding=1), # 640, 640
+            nn.ConvTranspose2d(16, 1, 3, stride=2, padding=1, output_padding=1),  # Upsample to 640x640
             nn.Tanh()
         )
 
     def forward(self, x):
-        x1 = self.encoder1(x)
+        x0 = self.encoder0(x)
+        x1 = self.encoder1(x0)
         x2 = self.encoder2(x1)
         x3 = self.encoder3(x2)
         x = self.decoder(x3)
         return x
+
 
 
 class UNetDecoder(nn.Module):
@@ -58,10 +66,10 @@ class UNetDecoder(nn.Module):
         :param x: Bottleneck input of shape (b, 64, 80, 80).
         :param skips: List of skip connection tensors [(b, 32, 160, 160), (b, 16, 320, 320)].
         """
-        x = self.up1(x, skips[0])  # Up to (b, 32, 160, 160), add skip from 160x160
-        x = self.up2(x, skips[1])  # Up to (b, 16, 320, 320), add skip from 320x320
-        x = self.up3(x, skips[2])  # Up to (b, 8, 640, 640), add skip from 640x640
-        logits = self.outc(x)      # Final output layer
+        x1 = self.up1(x, skips[0])  # (b, 32, 160, 160)
+        x2 = self.up2(x1, skips[1])  # (b, 16, 320, 320)
+        x3 = self.up3(x2, skips[2])  # (b, 8, 640, 640)
+        logits = self.outc(x3)
         return logits
 
 
@@ -75,22 +83,24 @@ class HybridUNet(nn.Module):
         self.encoder = autoencoder_encoder
 
         # Decoder from U-Net
-        self.up1 = unet_decoder.up1
-        self.up2 = unet_decoder.up2
-        self.up3 = unet_decoder.up3
-        self.outc = unet_decoder.outc
+        self.decoder = unet_decoder
 
     def forward(self, x):
         # Encoder
-        x1, x2, x3 = self.encoder(x)  # Intermediate features from Conv Autoencoder
+        x0 = self.encoder.encoder0(x)  # Feature map at 640x640
+        x1 = self.encoder.encoder1(x0)  # Feature map at 320x320
+        x2 = self.encoder.encoder2(x1)  # Feature map at 160x160
+        x3 = self.encoder.encoder3(x2)  # Feature map at 80x80
 
         # Decoder
-        x = self.up1(x3, x2)  # Skip connection with x2
-        x = self.up2(x, x1)   # Skip connection with x1
-        logits = self.outc(x) # Final output
+        logits = self.decoder(x3, [x2, x1, x0])  # Use x0 as the largest-scale skip connection
         return logits
 
-# Pretrained unet
+
+######################
+## Pretrained models##
+
+# Pretrained unet: smp.Unet
 def get_unet_model(encoder_name="efficientnet-b7",
                    encoder_weights="imagenet",
                    in_channels=1,
@@ -99,6 +109,35 @@ def get_unet_model(encoder_name="efficientnet-b7",
         encoder_name=encoder_name,
         encoder_weights=encoder_weights,
         in_channels=in_channels,
-        classes=num_classes
+        classes=num_classes 
     )
     return model
+
+# Testing
+# if __name__ == "__main__":
+#     # bottleneck = torch.randn(1, 64, 80, 80)  # Bottleneck output (x3)
+#     # skip1 = torch.randn(1, 32, 160, 160)    # Skip connection 1 (x2)
+#     # skip2 = torch.randn(1, 16, 320, 320)    # Skip connection 2 (x1)
+#     # skip3 = torch.randn(1, 8, 640, 640)     # Skip connection 3 (x)
+
+#     # # Instantiate the decoder
+#     # decoder = UNetDecoder(n_classes=1)
+
+#     # # Forward pass
+#     # output = decoder(bottleneck, [skip1, skip2, skip3])
+#     # print(output.shape)  # Expected output: (1, 1, 640, 640)
+    
+#     input_tensor = torch.randn(1, 1, 640, 640)
+#     model_dir = os.path.join('..', 'model')
+#     encoder_path = os.path.join(model_dir, 'autoencoder.pth')
+
+#     autoencoder_encoder = conv_autoencoder()
+#     autoencoder_encoder.load_state_dict(torch.load(encoder_path))
+#     unet_decoder = UNetDecoder(n_classes=1)
+    
+#     # Create HybridUNet model
+#     model = HybridUNet(autoencoder_encoder, unet_decoder)
+
+#     # Test the model
+#     output = model(input_tensor)
+#     print(output.shape)  # Should print torch.Size([1, 1, 640, 640])
