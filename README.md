@@ -1,7 +1,7 @@
 # ConVNet_scratch
 Exploring the modern Convnet architecture in the detection task. 
 
-I am using the open sourced Moon crater dataset: https://www.kaggle.com/datasets/lincolnzh/martianlunar-crater-detection-dataset
+I am using the open sourced Mars and Moon crater dataset: https://www.kaggle.com/datasets/lincolnzh/martianlunar-crater-detection-dataset
 
 The architecture I am planning to explore is:
 1. AutoEncoder
