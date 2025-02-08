@@ -11,7 +11,7 @@ The architecture I am planning to explore is:
 5. Faster-RCNN
 6. DETR (DEtection TRansformer)
 
-Except for YOLO, I am trying to make some of their parts from scratch for better understanding.
+Except for YOLO, I am trying to make some of their parts from scratch for the better understanding.
 
 ## Notable results:
 
