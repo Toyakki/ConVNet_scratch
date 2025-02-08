@@ -1,12 +1,10 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torchvision.models import vit_b_16
 import segmentation_models_pytorch as smp
-import os
-
+import timm
 
 from unet_parts import Up
+
 
 class conv_autoencoder(nn.Module):
     def __init__(self):
@@ -113,8 +111,26 @@ def get_unet_model(encoder_name="efficientnet-b7",
     )
     return model
 
-# Testing
-# if __name__ == "__main__":
+### MVIT
+class MViTv2SegmentationModel(nn.Module):
+    def __init__(self):
+        super(MViTv2SegmentationModel, self).__init__()
+        # Load timm pretrained MViTv2 model
+        self.backbone = timm.create_model("mvitv2_tiny", pretrained=True, num_classes=0)
+        
+        # Segmentation head
+        self.segmentation_head = nn.Sequential(
+            nn.Conv2d(256, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(128, 1, kernel_size=1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        features = self.backbone.forward_features(x)  # Get features from the backbone
+        return self.segmentation_head(features)       # Pass features through segmentation head
+
+
 #     # bottleneck = torch.randn(1, 64, 80, 80)  # Bottleneck output (x3)
 #     # skip1 = torch.randn(1, 32, 160, 160)    # Skip connection 1 (x2)
 #     # skip2 = torch.randn(1, 16, 320, 320)    # Skip connection 2 (x1)

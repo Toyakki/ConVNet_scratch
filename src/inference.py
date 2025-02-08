@@ -18,7 +18,7 @@ device = (
     else "cpu"
 )
 batch_size = 8 
-visualize = False
+visualize = True
 
 source = os.path.join('..', 'data')
 test_imgs_path = os.path.join(source, 'test/images')

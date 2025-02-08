@@ -23,6 +23,9 @@ val_imgs_path = os.path.join(source, 'valid/images')
 val_segmented_path = os.path.join(source, 'processed/valid')
 val_masks_path = os.path.join(source, 'mask/valid')
 
+# Configurations
+model_choice = 0
+
 # Hyperparameters
 device = (
     "cuda"
@@ -36,12 +39,12 @@ num_epochs = 10
 batch_size = 8
 
 
-autoencoder = conv_autoencoder()
-autoencoder.load_state_dict(torch.load(encoder_path))
-decoder = UNetDecoder(n_classes=1)
-unet_model = HybridUNet(autoencoder, decoder).to(device)
+# autoencoder = conv_autoencoder()
+# autoencoder.load_state_dict(torch.load(encoder_path))
+# decoder = UNetDecoder(n_classes=1)
+# unet_model = HybridUNet(autoencoder, decoder).to(device)
 
-# unet_model = get_unet_model(num_classes=1).to(device)
+unet_model = get_unet_model(num_classes=1).to(device)
 
 criterion = nn.BCEWithLogitsLoss()
 optimizer = torch.optim.AdamW(unet_model.parameters(), lr)
