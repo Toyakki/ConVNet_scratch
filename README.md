@@ -13,15 +13,52 @@ The architecture I am planning to explore is:
 
 Except for YOLO, I am trying to make some of their parts from scratch for the better understanding.
 
+## Directory Structure
+
+The project directory is organized as follows:
+
+```
+ConVNet_scratch/
+├── assets/
+│   ├── Loss.png
+│   ├── Good_dice.png
+│   └── Good_result.png
+├── data/
+│   ├── train/
+│   ├── val/
+│   └── test/
+├── models/
+│   ├── autoencoder.py
+│   ├── unet.py
+│   └── ...
+├── notebooks/
+│   ├── EDA.ipynb
+│   └── ...
+├── outputs/
+│   ├── logs/
+│   ├── checkpoints/
+│   └── ...
+├── train.py
+└── README.md
+```
+
+## Running EDA.ipynb
+To organize the directory and perform exploratory data analysis (EDA), follow these steps:
+
+1. Open the `EDA.ipynb` notebook located in the `notebooks/` directory.
+2. Run the cells in the notebook sequentially to load and preprocess the data.
+3. The notebook will automatically organize the data into the appropriate directories (`train/`, `val/`, `test/`).
+
 ## Notable results:
 
 ### UNet:
 Not suprisingly, the pretrained model in smp library is giving the best results. I tried the hybrid Unet using autoencoder and UNet decoder from scratch, but the results were not great. 
 The training loss and val loss change over 10 epochs. More traiings may result in good results.
 
-![A sample result with a good crater result](Loss.png)
+![A sample result with a good crater result](assets/Loss.png)
 
-A sample result with 78% dice score.
-![A sample result with a good crater result](Good_dice.png)
+An inference result with 78% dice score.
+![A sample result with a good crater result](assets/Good_dice.png)
 
-![A sample result with a bad crater result](Good_result.png)
+An inference result with the least validation loss.
+![A sample result with a bad crater result](assets/Good_result.png)
