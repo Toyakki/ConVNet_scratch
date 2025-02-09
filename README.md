@@ -13,12 +13,19 @@ The architecture I am planning to explore is:
 
 Except for YOLO, I am trying to make some of their parts from scratch for the better understanding.
 
+## Running EDA.ipynb
+To organize the directory and perform exploratory data analysis (EDA), follow these steps:
+
+1. Open the `EDA.ipynb` notebook located in the `notebooks/` directory.
+2. Run the cells in the notebook sequentially to load and preprocess the data.
+3. The notebook will automatically organize the data into the appropriate directories (`train/`, `val/`, `test/`).
+
 ## Directory Structure
 
-The project directory is organized as follows:
+The data directory should be organized as follows after running EDA.ipynb:
 
 ```
-ConVNet_scratch/
+ROOT
 ├── assets/
 │   ├── Loss.png
 │   ├── Good_dice.png
@@ -27,27 +34,11 @@ ConVNet_scratch/
 │   ├── train/
 │   ├── val/
 │   └── test/
-├── models/
-│   ├── autoencoder.py
-│   ├── unet.py
-│   └── ...
-├── notebooks/
-│   ├── EDA.ipynb
-│   └── ...
-├── outputs/
-│   ├── logs/
-│   ├── checkpoints/
-│   └── ...
-├── train.py
-└── README.md
+│   └── mask/
+│       │└── test/
+│       │└── train/
+│       │└── valid/
 ```
-
-## Running EDA.ipynb
-To organize the directory and perform exploratory data analysis (EDA), follow these steps:
-
-1. Open the `EDA.ipynb` notebook located in the `notebooks/` directory.
-2. Run the cells in the notebook sequentially to load and preprocess the data.
-3. The notebook will automatically organize the data into the appropriate directories (`train/`, `val/`, `test/`).
 
 ## Notable results:
 
