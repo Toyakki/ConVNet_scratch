@@ -94,6 +94,11 @@ class HybridUNet(nn.Module):
         logits = self.decoder(x3, [x2, x1, x0])  # Use x0 as the largest-scale skip connection
         return logits
 
+# Use cases (For encoder-decoder architecture)
+# autoencoder = conv_autoencoder()
+# autoencoder.load_state_dict(torch.load(encoder_path))
+# decoder = UNetDecoder(n_classes=1)
+# unet_model = HybridUNet(autoencoder, decoder).to(device)
 
 ######################
 ## Pretrained models##
@@ -129,31 +134,3 @@ class MViTv2SegmentationModel(nn.Module):
     def forward(self, x):
         features = self.backbone.forward_features(x)  # Get features from the backbone
         return self.segmentation_head(features)       # Pass features through segmentation head
-
-
-#     # bottleneck = torch.randn(1, 64, 80, 80)  # Bottleneck output (x3)
-#     # skip1 = torch.randn(1, 32, 160, 160)    # Skip connection 1 (x2)
-#     # skip2 = torch.randn(1, 16, 320, 320)    # Skip connection 2 (x1)
-#     # skip3 = torch.randn(1, 8, 640, 640)     # Skip connection 3 (x)
-
-#     # # Instantiate the decoder
-#     # decoder = UNetDecoder(n_classes=1)
-
-#     # # Forward pass
-#     # output = decoder(bottleneck, [skip1, skip2, skip3])
-#     # print(output.shape)  # Expected output: (1, 1, 640, 640)
-    
-#     input_tensor = torch.randn(1, 1, 640, 640)
-#     model_dir = os.path.join('..', 'model')
-#     encoder_path = os.path.join(model_dir, 'autoencoder.pth')
-
-#     autoencoder_encoder = conv_autoencoder()
-#     autoencoder_encoder.load_state_dict(torch.load(encoder_path))
-#     unet_decoder = UNetDecoder(n_classes=1)
-    
-#     # Create HybridUNet model
-#     model = HybridUNet(autoencoder_encoder, unet_decoder)
-
-#     # Test the model
-#     output = model(input_tensor)
-#     print(output.shape)  # Should print torch.Size([1, 1, 640, 640])
